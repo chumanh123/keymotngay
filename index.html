@@ -1,0 +1,347 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Lưu Key Theo Ngày</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            background-color: #f4f4f4;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        h2 {
+            color: #333;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        #keyForm {
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            width: 300px;
+            margin-bottom: 20px;
+        }
+
+        #keyForm label {
+            display: block;
+            margin-bottom: 8px;
+            color: #555;
+        }
+
+        #keyForm input[type="text"] {
+            width: calc(100% - 12px);
+            padding: 10px;
+            margin-bottom: 15px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+
+        #keyForm button {
+            background-color: #007bff;
+            color: white;
+            padding: 10px 15px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            width: 100%;
+        }
+
+        #savedKeys, #usedKeys, #countdown {
+            background-color: #e9f7ef;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            width: 300px;
+            margin-top: 20px;
+            text-align: center;
+        }
+
+        #savedKeys p, #usedKeys p {
+            background-color: #d1f1e6;
+            padding: 10px;
+            margin-bottom: 5px;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        #savedKeys p:hover, #usedKeys p:hover {
+            background-color: #b8e9d5;
+        }
+
+        #countdown {
+            font-size: 1.2em;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+
+    <h2>Nhập Key</h2>
+
+    <form id="keyForm">
+        <label for="keyInput">Key:</label><br>
+        <input type="text" id="keyInput" name="keyInput"><br><br>
+
+        <button type="button" onclick="saveKey()">Lưu Key</button>
+    </form>
+
+    <h2>Key Đã Lưu</h2>
+    <div id="savedKeys"></div>
+
+    <h2>Lịch Sử Key Đã Sử Dụng</h2>
+    <div id="usedKeys"></div>
+
+    <h2>Thời Gian Còn Lại</h2>
+    <div id="countdown"></div>
+
+    <script>
+        function saveKey() {
+
+            const key = document.getElementById("keyInput").value;
+
+            const today = new Date().toISOString().slice(0, 10);
+
+
+
+            const keys = JSON.parse(localStorage.getItem("dailyKeys")) || {};
+
+
+
+            if (!keys[today]) {
+
+                keys[today] = [];
+
+            }
+
+            keys[today].push(key);
+
+
+
+            localStorage.setItem("dailyKeys", JSON.stringify(keys));
+
+
+
+            alert("Key đã được lưu!");
+
+            displaySavedKeys();
+
+        }
+
+
+
+        function displaySavedKeys() {
+
+            const savedKeysElement = document.getElementById("savedKeys");
+
+            const today = new Date().toISOString().slice(0, 10);
+
+            const keys = JSON.parse(localStorage.getItem("dailyKeys")) || {};
+
+
+
+            savedKeysElement.innerHTML = "";
+
+
+
+            if (keys[today] && keys[today].length > 0) {
+
+                keys[today].forEach(key => {
+
+                    const keyElement = document.createElement("p");
+
+                    keyElement.textContent = key;
+
+                    keyElement.addEventListener("click", () => {
+
+                        copyToClipboard(key);
+
+                        removeKey(key);
+
+                        addToUsedKeys(key);
+
+                    });
+
+                    savedKeysElement.appendChild(keyElement);
+
+                });
+
+            } else {
+
+                savedKeysElement.innerHTML = "<p>Không có key đã lưu cho ngày hôm nay.</p>";
+
+            }
+
+        }
+
+
+
+        function copyToClipboard(text) {
+
+            navigator.clipboard.writeText(text).then(() => {
+
+                alert("Key đã được sao chép vào clipboard!");
+
+            }).catch(err => {
+
+                console.error("Không thể sao chép key: ", err);
+
+            });
+
+        }
+
+
+
+        function removeKey(keyToRemove) {
+
+            const today = new Date().toISOString().slice(0, 10);
+
+            const keys = JSON.parse(localStorage.getItem("dailyKeys")) || {};
+
+
+
+            if (keys[today]) {
+
+                keys[today] = keys[today].filter(key => key !== keyToRemove);
+
+                localStorage.setItem("dailyKeys", JSON.stringify(keys));
+
+                displaySavedKeys();
+
+            }
+
+        }
+
+
+
+        function addToUsedKeys(key) {
+
+            const usedKeys = JSON.parse(localStorage.getItem("usedKeys")) || [];
+
+            usedKeys.push(key);
+
+            localStorage.setItem("usedKeys", JSON.stringify(usedKeys));
+
+            displayUsedKeys();
+
+        }
+
+
+
+        function displayUsedKeys() {
+
+            const usedKeysElement = document.getElementById("usedKeys");
+
+            const usedKeys = JSON.parse(localStorage.getItem("usedKeys")) || [];
+
+
+
+            usedKeysElement.innerHTML = "";
+
+
+
+            if (usedKeys.length > 0) {
+
+                usedKeys.forEach(key => {
+
+                    const keyElement = document.createElement("p");
+
+                    keyElement.textContent = key;
+
+                    usedKeysElement.appendChild(keyElement);
+
+                });
+
+            } else {
+
+                usedKeysElement.innerHTML = "<p>Không có key đã sử dụng.</p>";
+
+            }
+
+        }
+
+
+
+        function clearDailyKeys() {
+
+            const lastClearDate = localStorage.getItem("lastClearDate");
+
+            const today = new Date().toISOString().slice(0, 10);
+
+
+
+            if (lastClearDate !== today) {
+
+                localStorage.removeItem("dailyKeys");
+
+                localStorage.setItem("lastClearDate", today);
+
+                console.log("Key hàng ngày đã được xóa.");
+
+                displaySavedKeys();
+
+            }
+
+        }
+
+
+
+        function updateCountdown() {
+
+            const countdownElement = document.getElementById("countdown");
+
+            const now = new Date();
+
+            const endOfDay = new Date();
+
+            endOfDay.setHours(24, 0, 0, 0);
+
+
+
+            const timeLeft = endOfDay - now;
+
+
+
+            if (timeLeft > 0) {
+
+                const hours = Math.floor(timeLeft / (1000 * 60 * 60));
+
+                const minutes = Math.floor((timeLeft % (1000 * 60 * 60)) / (1000 * 60));
+
+                const seconds = Math.floor((timeLeft % (1000 * 60)) / 1000);
+
+
+
+                countdownElement.textContent = `${hours}h ${minutes}m ${seconds}s`;
+
+            } else {
+
+                countdownElement.textContent = "Hết hạn";
+
+            }
+
+        }
+
+
+
+        clearDailyKeys();
+
+        displaySavedKeys();
+
+        displayUsedKeys();
+
+        setInterval(updateCountdown, 1000);
+
+    </script>
+
+
+
+</body>
+
+</html>
